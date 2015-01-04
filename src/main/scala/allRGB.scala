@@ -56,8 +56,29 @@ object allRGB {
     }
   }
 
-  def main (args: Array[String]): Unit = {
+  def getAvailable(pixels: Map[Coordinate, Option[Colour]]): List[Coordinate] = {
+    var ret = Set[Coordinate]()
+    for {
+      (coordinate, colourOption) <- pixels
+      if ! isColour(colourOption)
+    } for {
+        neighbour <- coordinate.neighbours
+        if ! ret.contains(neighbour)
+        if isColour(pixels.get(neighbour) match {
+          case None => None
+          case Some(neighbourColourOption) =>
+            neighbourColourOption match {
+              case None => None
+              case(neighbourColour) =>
+                neighbourColourOption
+            }
+        })
+      } ret += coordinate
+    ret.toList
+  }
 
+
+  def main (args: Array[String]): Unit = {
 
     var pixels: Map[Coordinate, Option[Colour]] = (
       for { x <- List.range(0, width)
