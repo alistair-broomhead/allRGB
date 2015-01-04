@@ -125,5 +125,28 @@ object allRGB {
       for { x <- List.range(0, width)
             y <- List.range(0, height) } yield new Coordinate(x, y) -> None
       ).toMap
+
+    assert(pixels.size == palette.colours.length, "Number of pixels must match the number of colours")
+
+    for {
+      colour <- palette.colours
+    }{
+
+      val available = getAvailable(pixels)
+      val coordinate: Coordinate = if (available.length == 0) {
+       Coordinate(width / 2, height / 2)
+      } else {
+        available.sortBy(
+          c => c.calcDiff(pixels, colour)
+        ).head
+      }
+
+      assert(pixels(coordinate) equals None, s"Pixel must be blank: $coordinate -> ${pixels(coordinate)}")
+
+      pixels += (coordinate -> Option(colour))
+    }
+
+    savePNG(pixels)
+
   }
 }
