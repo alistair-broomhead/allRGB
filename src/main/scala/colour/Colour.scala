@@ -8,7 +8,7 @@ object Colour {
   val coloursPerChannel:Int = pow(2, bitsPerChannel).toInt
 }
 
-class Colour(var red: Int, var green: Int, var blue: Int){
+class Colour(val red: Int, val green: Int, val blue: Int){
 
   override def toString: String = s"Colour($red, $green, $blue)"
 

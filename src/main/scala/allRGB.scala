@@ -15,7 +15,7 @@ object allRGB {
   val height:Int = pow(2, colours.bits / 2).toInt
   val width:Int = colours.colours.length / height
 
-  class Coordinate(var x: Int, var y: Int){
+  class Coordinate(val x: Int, val y: Int){
     def equals(other: Coordinate): Boolean = {
       (other.x == x) && (other.y == y)
     }
