@@ -7,7 +7,7 @@ import scala.math.pow
 
 object allRGB {
   val average = false
-  val colours:Colours = new Colours(6)
+  val colours:ColourPalette = new ColourPalette(6)
 
   /* This guarantees that the resulting image will either be square, or
    * have a 2:1 height:width ratio.
@@ -59,7 +59,7 @@ object allRGB {
 
   def main (args: Array[String]): Unit = {
 
-    val palette:Colours = new Colours(3)
+    val palette:ColourPalette = new ColourPalette(3)
     println(palette.colours)
     println(palette.colours.length)
 

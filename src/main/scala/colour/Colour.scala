@@ -18,7 +18,7 @@ class Colour(var red: Int, var green: Int, var blue: Int){
     red + (green*gMult) + (blue*bMult)
   }
 
-  def difference(otherOption: Option[Colour]): Option[Int] = {
+  def difference(otherOption: Option[Colour]): Option[Int] =
     otherOption match {
       case Some(other) =>
         Option(toInt - other.toInt)
@@ -26,5 +26,4 @@ class Colour(var red: Int, var green: Int, var blue: Int){
       case None =>
         None
     }
-  }
 }
