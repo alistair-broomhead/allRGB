@@ -5,57 +5,76 @@ import colour._
 
 import scala.math.pow
 
-
-
-
 object allRGB {
   val average = false
-  val colours:ColourPalette = new ColourPalette(6)
+  val palette:ColourPalette = new ColourPalette(12)
 
   /* This guarantees that the resulting image will either be square, or
    * have a 2:1 height:width ratio.
    */
-  val height:Int = pow(2, colours.bits / 2).toInt
-  val width:Int = colours.colours.length / height
+  val height:Int = pow(2, palette.bits / 2).toInt
+  val width:Int = palette.colours.length / height
 
-  class Coordinate(val x: Int, val y: Int){
+  case class Coordinate(x: Int, y: Int) {
     def equals(other: Coordinate): Boolean = {
       (other.x == x) && (other.y == y)
     }
-    lazy val neighbours: List[Coordinate] = (
-      for {
-        dy <- List.range(-1, 1)
+
+    lazy val neighbours: List[Coordinate] = {
+      val rng = List(-1, 0, 1)
+      (for {
+        dy <- rng
         y1 = y + dy
         if 0 <= y1 && y1 <= height
       } yield {
         for {
-          dx <- List.range(-1, 1)
+          dx <- rng
           x1 = x + dx
           if 0 <= x1 && x1 <= width
         } yield {
-          new Coordinate(x1, y1)
+          Coordinate(x1, y1)
         }
-    }).flatten
-
-
-  def calcDiff (neighbours: List[Option[Colour]], colour: Colour): Int = {
-    val diffs:List[Option[Int]] = for {
-      neighbour <- neighbours
-    } yield colour.difference(neighbour)
-
-    def sumOption(left: Int, rightOption: Option[Int]): Int = {
-      rightOption match {
-        case Some(right) =>
-          left + right
-        case None =>
-          left
-      }
+      }).flatten
     }
 
-    if (average) {
-      diffs.foldLeft(0)(sumOption) / diffs.size
-    } else {
-      diffs.min.getOrElse(0)
+
+    def calcDiff(pixels: Map[Coordinate, Option[Colour]], colour: Colour): Int = {
+      val neighbourColours: List[Option[Colour]] = for {
+        neighbour <- neighbours
+      } yield {
+        pixels.get(neighbour) match {
+          case Some(colourOption) =>
+            colourOption
+          case None =>
+            None
+        }
+      }
+
+      val diffs: List[Option[Int]] = for {
+        neighbour <- neighbourColours
+      } yield colour.difference(neighbour)
+
+      def sumOption(left: Int, rightOption: Option[Int]): Int = {
+        rightOption match {
+          case Some(right) =>
+            left + right
+          case None =>
+            left
+        }
+      }
+
+      if (average) {
+        diffs.foldLeft(0)(sumOption) / diffs.size
+      } else {
+        diffs.min.getOrElse(0)
+      }
+    }
+  }
+
+  def isColour(colourOption: Option[Colour]): Boolean = {
+    colourOption match {
+      case None => false
+      case Some(colour) => true
     }
   }
 
