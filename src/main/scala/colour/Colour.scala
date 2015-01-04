@@ -1,5 +1,7 @@
 package colour
 
+import java.awt.{Color => awtColour}
+
 import scala.math.pow
 
 object Colour {
@@ -9,6 +11,8 @@ object Colour {
 }
 
 class Colour(val red: Int, val green: Int, val blue: Int){
+
+  val awt: awtColour = new awtColour(red, green, blue)
 
   override def toString: String = s"Colour($red, $green, $blue)"
 

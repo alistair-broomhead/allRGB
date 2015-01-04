@@ -1,3 +1,6 @@
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
+
 import colour._
 
 import scala.math.pow
@@ -77,6 +80,25 @@ object allRGB {
     ret.toList
   }
 
+  def savePNG(pixels: Map[Coordinate, Option[Colour]]): Unit = {
+    val img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+    val canvas = img.createGraphics()
+
+    for {
+      (coordinate, colourOption) <- pixels
+    } {
+      colourOption match {
+        case None =>
+        case Some(colour) =>
+          canvas.setColor(colour.awt)
+          canvas.fillRect(coordinate.x, coordinate.y, 1, 1)
+      }
+    }
+    canvas.dispose()
+
+
+    ImageIO.write(img, "png", new java.io.File("allRGB.png"))
+  }
 
   def main (args: Array[String]): Unit = {
 
