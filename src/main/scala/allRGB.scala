@@ -19,22 +19,21 @@ object allRGB {
     def equals(other: Coordinate): Boolean = {
       (other.x == x) && (other.y == y)
     }
-    def neighbours: List[Coordinate] = {
+    lazy val neighbours: List[Coordinate] = (
       for {
-        dy <- List.range(
-          if (y > 0) -1 else 0,
-          if (y < height) 1 else 0)
+        dy <- List.range(-1, 1)
+        y1 = y + dy
+        if 0 <= y1 && y1 <= height
       } yield {
         for {
-          dx <- List.range(
-            if (x > 0) -1 else 0,
-            if (x < width) 1 else 0)
+          dx <- List.range(-1, 1)
+          x1 = x + dx
+          if 0 <= x1 && x1 <= width
         } yield {
-          new Coordinate(x + dx, y + dy)
+          new Coordinate(x1, y1)
         }
-      }
-    }.flatten
-  }
+    }).flatten
+
 
   def calcDiff (neighbours: List[Option[Colour]], colour: Colour): Int = {
     val diffs:List[Option[Int]] = for {
