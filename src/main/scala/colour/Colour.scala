@@ -24,10 +24,13 @@ class Colour(val red: Int, val green: Int, val blue: Int){
 
   def difference(otherOption: Option[Colour]): Option[Int] =
     otherOption match {
-      case Some(other) =>
-        Option(toInt - other.toInt)
-
       case None =>
         None
+
+      case Some(other) =>
+        val r = red - other.red
+        val g = green - other.green
+        val b = blue - other.blue
+        Option(r*r + g*g + b*b)
     }
 }

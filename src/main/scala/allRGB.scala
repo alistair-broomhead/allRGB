@@ -43,30 +43,31 @@ object allRGB {
         neighbour <- neighbours
       } yield {
         pixels.get(neighbour) match {
-          case Some(colourOption) =>
-            colourOption
           case None =>
             None
+          case Some(colourOption) =>
+            colourOption
         }
       }
 
       val diffs: List[Option[Int]] = for {
-        neighbour <- neighbourColours
-      } yield colour.difference(neighbour)
+        neighbourColour <- neighbourColours
+        if ! (neighbourColour equals None)
+      } yield colour.difference(neighbourColour)
 
       def sumOption(left: Int, rightOption: Option[Int]): Int = {
         rightOption match {
+          case None =>
+            left// + (2 << Colour.bitDepth)
           case Some(right) =>
             left + right
-          case None =>
-            left
         }
       }
 
       if (average) {
         diffs.foldLeft(0)(sumOption) / diffs.size
       } else {
-        diffs.min.getOrElse(0)
+        diffs.min.get
       }
     }
   }
@@ -119,6 +120,25 @@ object allRGB {
     ImageIO.write(img, "png", new java.io.File("allRGB.png"))
   }
 
+  def closest(pixels: Map[Coordinate, Option[Colour]],
+              colour: Colour,
+              available: List[Coordinate]): Coordinate = {
+
+    var closestTemp = available.head
+    var closestDiff = closestTemp.calcDiff(pixels, colour)
+
+    for {
+        c <- available
+        d = c.calcDiff(pixels, colour)
+        if d < closestDiff
+      } {
+        closestTemp = c
+        closestDiff = d
+      }
+
+    closestTemp
+  }
+
   def main (args: Array[String]): Unit = {
 
     var pixels: Map[Coordinate, Option[Colour]] = (
@@ -136,9 +156,7 @@ object allRGB {
       val coordinate: Coordinate = if (available.length == 0) {
        Coordinate(width / 2, height / 2)
       } else {
-        available.sortBy(
-          c => c.calcDiff(pixels, colour)
-        ).head
+        closest(pixels, colour, available)
       }
 
       assert(pixels(coordinate) equals None, s"Pixel must be blank: $coordinate -> ${pixels(coordinate)}")
