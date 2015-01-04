@@ -58,9 +58,6 @@ object allRGB {
 
   def main (args: Array[String]): Unit = {
 
-    val palette:ColourPalette = new ColourPalette(3)
-    println(palette.colours)
-    println(palette.colours.length)
 
     var pixels: Map[Coordinate, Option[Colour]] = (
       for { x <- List.range(0, width)
