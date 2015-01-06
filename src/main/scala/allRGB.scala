@@ -1,4 +1,3 @@
-import java.awt.Graphics2D
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import javax.imageio.stream.FileImageOutputStream
@@ -7,9 +6,11 @@ import allRBG.colour.Colour
 import allRBG.constants.Constants
 import allRBG.drawing.Coordinate
 
+import scala.collection.mutable
+
 object allRGB {
 
-  def closest(pixels: Map[Coordinate, Option[Colour]],
+  def closest(pixels: mutable.Map[Coordinate, Colour],
               colour: Colour,
               available: List[Coordinate]): Coordinate = {
 
@@ -34,25 +35,21 @@ object allRGB {
 
   def main (args: Array[String]): Unit = {
 
-    var pixels: Map[Coordinate, Option[Colour]] = (
-      for { x <- List.range(0, Constants.imageWidth)
-            y <- List.range(0, Constants.imageHeight) } yield new Coordinate(x, y) -> None
-      ).toMap
+    println("Initialising...")
+    val imageSize = Constants.imageWidth * Constants.imageHeight
 
-    var available = Set[Coordinate](
+    val pixels: mutable.Map[Coordinate, Colour] = mutable.Map()
+    val available = mutable.Set[Coordinate](
       Coordinate(Constants.imageWidth / 2, Constants.imageHeight / 2)
     )
 
-    assert(pixels.size == Constants.palette.colours.length, "Number of pixels must match the number of colours")
-
-    val percentagePoint:Double = pixels.size.toDouble / 1000.0
+    val percentagePoint:Double = imageSize / 1000.0
     var nextPercentagePoint:Double = 0
 
     val img = new BufferedImage(Constants.imageWidth, Constants.imageHeight, BufferedImage.TYPE_INT_RGB)
-    val canvas: Graphics2D = img.createGraphics()
 
     val output = new FileImageOutputStream(new java.io.File(s"allRGB.gif"))
-    val writer = new GifSequenceWriter(output, 1, 1, false)
+    val writer = new GifSequenceWriter(output, 1, 10, false)
 
     println("Generating image (Each '.' below is 0.1% progress)")
 
@@ -62,29 +59,30 @@ object allRGB {
     }{
       val coordinate = closest(pixels, colour, available.toList)
 
-      assert(pixels(coordinate) equals None, s"Pixel must be blank: $coordinate -> ${pixels(coordinate)}")
+      val existingColour = pixels.getOrElse(coordinate, None)
+      assert(existingColour.equals(None), s"Pixel must be blank: $coordinate -> $existingColour")
 
       // This is the bit where we have all the nasty mutable state
       iterations += 1
-      pixels += (coordinate -> Option(colour))
+      pixels.update(coordinate, colour)
 
       for {
         neighbour <- coordinate.neighbours
-        if ! Colour.isColourOption(pixels.getOrElse(neighbour, None))
-      } available += neighbour
+        if pixels.getOrElse(neighbour, None).equals(None)
+      } available.add(neighbour)
 
-      available -= coordinate
+      available.remove(coordinate)
       // Phew it's over!
 
-      canvas.setColor(colour.awt)
-      canvas.fillRect(coordinate.x, coordinate.y, 1, 1)
+      img.setRGB(coordinate.x, coordinate.y, colour.awt.getRGB)
 
       // Side effects live here
       if (nextPercentagePoint <= iterations){
 
-        while (nextPercentagePoint <= iterations) nextPercentagePoint += percentagePoint
-
-        print(".")
+        while (nextPercentagePoint <= iterations){
+          print(".")
+          nextPercentagePoint += percentagePoint
+        }
 
         try {
           writer.writeToSequence(img)
@@ -95,10 +93,10 @@ object allRGB {
       }
     }
 
+    assert(iterations equals imageSize, s"$iterations equals $imageSize")
     print(".\nComplete!")
     ImageIO.write(img, "png", new java.io.File("allRGB.png"))
 
-    canvas.dispose()
     writer.close()
     output.close()
 

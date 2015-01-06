@@ -30,14 +30,15 @@ case class Coordinate(x: Int, y: Int) {
     }).flatten
   }
 
-  def getNeighbourColours(pixels: Map[Coordinate, Option[Colour]]):List[Colour] = {
+  def getNeighbourColours(pixels: scala.collection.mutable.Map[Coordinate, Colour]):List[Colour] = {
     for {
       neighbour <- neighbours
-      if (pixels.get(neighbour) match {
+      colourOption = pixels.get(neighbour)
+      if (colourOption match {
         case None => false
-        case Some(colourOption) => Colour.isColourOption(colourOption)
+        case Some(colour) => true
       })
-    } yield pixels.get(neighbour).get.get
+    } yield colourOption.get
   }
 
 
