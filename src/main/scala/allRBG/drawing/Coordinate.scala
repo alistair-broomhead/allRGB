@@ -5,6 +5,10 @@ import allRBG.constants.Constants
 
 
 case class Coordinate(x: Int, y: Int) {
+
+  assert(0 <= x && x < Constants.imageWidth)
+  assert(0 <= y && y < Constants.imageHeight)
+
   def equals(other: Coordinate): Boolean = {
     (other.x == x) && (other.y == y)
   }
@@ -14,49 +18,38 @@ case class Coordinate(x: Int, y: Int) {
     (for {
       dy <- rng
       y1 = y + dy
-      if 0 <= y1 && y1 <= Constants.imageHeight
+      if 0 <= y1 && y1 < Constants.imageHeight
     } yield {
       for {
         dx <- rng
         x1 = x + dx
-        if 0 <= x1 && x1 <= Constants.imageWidth
+        if 0 <= x1 && x1 < Constants.imageWidth
       } yield {
         Coordinate(x1, y1)
       }
     }).flatten
   }
 
-
-  def calcDiff(pixels: Map[Coordinate, Option[Colour]], colour: Colour): Int = {
-    val neighbourColours: List[Option[Colour]] = for {
+  def getNeighbourColours(pixels: Map[Coordinate, Option[Colour]]):List[Colour] = {
+    for {
       neighbour <- neighbours
-    } yield {
-      pixels.get(neighbour) match {
-        case None =>
-          None
-        case Some(colourOption) =>
-          colourOption
-      }
-    }
+      if (pixels.get(neighbour) match {
+        case None => false
+        case Some(colourOption) => Colour.isColourOption(colourOption)
+      })
+    } yield pixels.get(neighbour).get.get
+  }
 
-    val diffs: List[Option[Int]] = for {
+
+  def calcDiff(neighbourColours: List[Colour], colour: Colour): Int = {
+    val diffs: List[Int] = for {
       neighbourColour <- neighbourColours
-      if ! (neighbourColour equals None)
     } yield colour.difference(neighbourColour)
 
-    def sumOption(left: Int, rightOption: Option[Int]): Int = {
-      rightOption match {
-        case None =>
-          left// + (2 << Colour.bitDepth)
-        case Some(right) =>
-          left + right
-      }
-    }
-
     if (Constants.average) {
-      diffs.foldLeft(0)(sumOption) / diffs.size
+      diffs.sum / diffs.length
     } else {
-      diffs.min.get
+      diffs.min
     }
   }
 }

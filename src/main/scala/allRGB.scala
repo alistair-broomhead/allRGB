@@ -7,99 +7,86 @@ import allRBG.drawing.Coordinate
 
 object allRGB {
 
-  def isColour(colourOption: Option[Colour]): Boolean = {
-    colourOption match {
-      case None => false
-      case Some(colour) => true
-    }
-  }
-
-  def getAvailable(pixels: Map[Coordinate, Option[Colour]]): List[Coordinate] = {
-    var ret = Set[Coordinate]()
-    for {
-      (coordinate, colourOption) <- pixels
-      if ! isColour(colourOption)
-    } for {
-        neighbour <- coordinate.neighbours
-        if ! ret.contains(neighbour)
-        if isColour(pixels.get(neighbour) match {
-          case None => None
-          case Some(neighbourColourOption) =>
-            neighbourColourOption match {
-              case None => None
-              case(neighbourColour) =>
-                neighbourColourOption
-            }
-        })
-      } ret += coordinate
-    ret.toList
-  }
-
-  def savePNG(pixels: Map[Coordinate, Option[Colour]]): Unit = {
-    val img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-    val canvas = img.createGraphics()
-
-    for {
-      (coordinate, colourOption) <- pixels
-    } {
-      colourOption match {
-        case None =>
-        case Some(colour) =>
-          canvas.setColor(colour.awt)
-          canvas.fillRect(coordinate.x, coordinate.y, 1, 1)
-      }
-    }
-    canvas.dispose()
-
-
-    ImageIO.write(img, "png", new java.io.File("allRGB.png"))
-  }
-
   def closest(pixels: Map[Coordinate, Option[Colour]],
               colour: Colour,
               available: List[Coordinate]): Coordinate = {
 
-    var closestTemp = available.head
-    var closestDiff = closestTemp.calcDiff(pixels, colour)
+    if (available.size == 1){
+      available.head
+    } else {
+      var closestTemp = available.head
+      var closestDiff = closestTemp.calcDiff(closestTemp.getNeighbourColours(pixels), colour)
 
-    for {
+      for {
         c <- available
-        d = c.calcDiff(pixels, colour)
+        d = c.calcDiff(c.getNeighbourColours(pixels), colour)
         if d < closestDiff
       } {
         closestTemp = c
         closestDiff = d
       }
 
-    closestTemp
+      closestTemp
+    }
   }
 
   def main (args: Array[String]): Unit = {
 
     var pixels: Map[Coordinate, Option[Colour]] = (
-      for { x <- List.range(0, width)
-            y <- List.range(0, height) } yield new Coordinate(x, y) -> None
+      for { x <- List.range(0, Constants.imageWidth)
+            y <- List.range(0, Constants.imageHeight) } yield new Coordinate(x, y) -> None
       ).toMap
 
-    assert(pixels.size == palette.colours.length, "Number of pixels must match the number of colours")
+    var available = Set[Coordinate](
+      Coordinate(Constants.imageWidth / 2, Constants.imageHeight / 2)
+    )
 
+    assert(pixels.size == Constants.palette.colours.length, "Number of pixels must match the number of colours")
+
+    val percentagePoint:Double = pixels.size.toDouble / 1000.0
+    var nextPercentagePoint:Double = 0
+
+    val img = new BufferedImage(Constants.imageWidth, Constants.imageHeight, BufferedImage.TYPE_INT_RGB)
+    val canvas: Graphics2D = img.createGraphics()
+
+    println("Generating image (Each '.' below is 0.1% progress)")
+
+    var iterations: Int = 0
     for {
-      colour <- palette.colours
+      colour <- Constants.palette.colours
     }{
-
-      val available = getAvailable(pixels)
-      val coordinate: Coordinate = if (available.length == 0) {
-       Coordinate(width / 2, height / 2)
-      } else {
-        closest(pixels, colour, available)
-      }
+      val coordinate = closest(pixels, colour, available.toList)
 
       assert(pixels(coordinate) equals None, s"Pixel must be blank: $coordinate -> ${pixels(coordinate)}")
 
+      // This is the bit where we have all the nasty mutable state
+      iterations += 1
       pixels += (coordinate -> Option(colour))
+
+      for {
+        neighbour <- coordinate.neighbours
+        if ! Colour.isColourOption(pixels.getOrElse(neighbour, None))
+      } available += neighbour
+
+      available -= coordinate
+      // Phew it's over!
+
+      canvas.setColor(colour.awt)
+      canvas.fillRect(coordinate.x, coordinate.y, 1, 1)
+
+      // Side effects live here
+      if (nextPercentagePoint <= iterations){
+
+        while (nextPercentagePoint <= iterations) nextPercentagePoint += percentagePoint
+
+        print(".")
+      }
     }
 
-    savePNG(pixels)
+    print(".\nComplete!")
+    ImageIO.write(img, "png", new java.io.File("allRGB.png"))
+
+    canvas.dispose()
 
   }
 }
