@@ -1,5 +1,7 @@
+import java.awt.Graphics2D
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
+import javax.imageio.stream.FileImageOutputStream
 
 import allRBG.colour.Colour
 import allRBG.constants.Constants
@@ -49,6 +51,9 @@ object allRGB {
     val img = new BufferedImage(Constants.imageWidth, Constants.imageHeight, BufferedImage.TYPE_INT_RGB)
     val canvas: Graphics2D = img.createGraphics()
 
+    val output = new FileImageOutputStream(new java.io.File(s"allRGB.gif"))
+    val writer = new GifSequenceWriter(output, 1, 1, false)
+
     println("Generating image (Each '.' below is 0.1% progress)")
 
     var iterations: Int = 0
@@ -80,6 +85,13 @@ object allRGB {
         while (nextPercentagePoint <= iterations) nextPercentagePoint += percentagePoint
 
         print(".")
+
+        try {
+          writer.writeToSequence(img)
+        } catch {
+          case e: Exception =>
+            ImageIO.write(img, "png", new java.io.File(s"allRGB_$iterations.png"))
+        }
       }
     }
 
@@ -87,6 +99,8 @@ object allRGB {
     ImageIO.write(img, "png", new java.io.File("allRGB.png"))
 
     canvas.dispose()
+    writer.close()
+    output.close()
 
   }
 }
