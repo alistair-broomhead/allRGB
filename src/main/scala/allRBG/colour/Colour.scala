@@ -1,4 +1,4 @@
-package colour
+package allRBG.colour
 
 import java.awt.{Color => awtColour}
 

@@ -1,4 +1,4 @@
-package colour
+package allRBG.colour
 
 import scala.math._
 import scala.util.Random
